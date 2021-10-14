@@ -2,6 +2,10 @@ import domein.Adres;
 import domein.OVChipkaart;
 import domein.Product;
 import domein.Reiziger;
+import hibernates.AdresDAOHibernate;
+import hibernates.OVChipkaartDAOHibernate;
+import hibernates.ProductDAOHibernate;
+import hibernates.ReizigerDAOHibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -47,10 +51,8 @@ public class Main {
     }
 
     public static void main(String[] args) throws SQLException {
-        testReiziger_Adres();
-        testReiziger_OVChipkaart();
-        testOVChipkaart_Product();
-        testFetchAll();
+        testDAOHibernate();
+//        testFetchAll();
     }
 
     /**
@@ -74,97 +76,133 @@ public class Main {
         }
     }
 
-    private static void testReiziger_Adres() {
-        Session session = getSession();
+    public static void testDAOHibernate() {
+        // Sessions maken
+        ReizigerDAOHibernate rdao = new ReizigerDAOHibernate(getSession());
+        AdresDAOHibernate adao = new AdresDAOHibernate(getSession());
+        OVChipkaartDAOHibernate odao = new OVChipkaartDAOHibernate(getSession());
+        ProductDAOHibernate pdao = new ProductDAOHibernate(getSession());
 
-        Reiziger r = new Reiziger("P", null, "Ooms", Date.valueOf("1999-09-09"));
-        Adres a = new Adres("4208BJ", "90", "Ruigenhoek", "Gorinchem");
+        // Reiziger, Adres, OVChipkaart en Product maken
+        Reiziger reiziger = new Reiziger("P", "", "Ooms", java.sql.Date.valueOf("1999-09-09"));
+        Reiziger reiziger2 = new Reiziger("P", "", "Ooms", java.sql.Date.valueOf("1997-12-24"));
+        Adres adres = new Adres("4208BJ", "90", "Ruigenhoek", "Gorinchem");
+        Adres adres2 = new Adres("1234AB", "123", "ABC", "Gorinchem");
+        OVChipkaart ovChipkaart = new OVChipkaart(java.sql.Date.valueOf("2031-10-12"), 3, 9999.99);
+        Product product = new Product("TEST PRODUCT", "TEST beschrijving", 420.00);
 
-        //Reiziger opslaan
-        session.beginTransaction();
-        session.save(r);
-        session.getTransaction().commit();
+        // Adres-reiziger setten
+        adres.setReiziger(reiziger);
+        adres2.setReiziger(reiziger2);
 
-        //Reiziger op adres setten
-        a.setReiziger(r);
+        // OVChipkaart setten
+        ovChipkaart.setReiziger(reiziger);
 
-        //Adres opslaan
-        session.beginTransaction();
-        session.save(a);
-        session.getTransaction().commit();
+        product.ovChipkaartToevoegen(ovChipkaart);
 
-        //Sessie afsluiten
-        session.close();
-    }
+        System.out.println("\n-------------------- Test ReizigerDAO -----------------------");
+        List<Reiziger> reizigers = rdao.findAll();
 
-    private static void testReiziger_OVChipkaart() {
-        //Reiziger + ovchipkaarten aanmaken
-        Reiziger r = new Reiziger("J", null, "Ooms", Date.valueOf("1997-12-24"));
-        OVChipkaart o = new OVChipkaart(Date.valueOf("2025-01-01"), 2, 9999);
-        OVChipkaart o2 = new OVChipkaart(Date.valueOf("2030-01-01"), 1, 8888);
-        OVChipkaart o3 = new OVChipkaart(Date.valueOf("2035-01-01"), 2, 7777);
+        System.out.print("[Test] Eerst " + reizigers.size() + " reizigers, na ReizigerDAO.save() ");
+        rdao.save(reiziger);
+        reizigers = rdao.findAll();
+        System.out.println(reizigers.size() + " reizigers\n");
 
-        //OVChipkaarten op de reiziger setten
-        o.setReiziger(r);
-        o2.setReiziger(r);
-        o3.setReiziger(r);
-
-        //Lijst v OV's op reiziger setten
-
-        List<OVChipkaart> ovChipkaarten = Arrays.asList(o, o2, o3);
-        r.setOvChipkaart(ovChipkaarten);
-
-        Session session = getSession();
-
-        //OVChipkaarten opslaan
-        session.beginTransaction();
-        session.save(r);
-        session.getTransaction().commit();
-
-        //Sessie afsluiten
-        session.close();
-    }
-
-    private static void testOVChipkaart_Product() {
-        // Reiziger + OV's + Producten aanmaken
-        Reiziger r = new Reiziger("P", null, "Ooms", Date.valueOf("2001-10-30"));
-        OVChipkaart o = new OVChipkaart(Date.valueOf("2022-01-01"), 2, 1234);
-        OVChipkaart o2 = new OVChipkaart(Date.valueOf("2024-09-01"), 1, 5678);
-
-        Product p = new Product("Weekkaart", "Een hele week reizen", 420.00);
-        Product p2 = new Product("Maandkaart", "Een hele maand reizen", 9999.99);
-
-        List<OVChipkaart> ovChipkaarten = Arrays.asList(o, o2);
-        List<Product> producten = Arrays.asList(p, p2);
-
-        o.setReiziger(r);
-        o2.setReiziger(r);
-
-        r.setOvChipkaart(ovChipkaarten);
-
-        Session session = getSession();
-
-        session.save(r);
-
-        //OVChipkaarten opslaan
-        for (OVChipkaart ovc : ovChipkaarten) {
-            ovc.setReiziger(r);
-            session.beginTransaction();
-            session.save(o);
-            session.getTransaction().commit();
+        System.out.println("[Test] ReizigerDAO.findAll() geeft de volgende reizigers:");
+        for (Reiziger r : reizigers) {
+            System.out.println(r);
         }
+        System.out.println();
 
-        //OVChipkaarten op product setten
-        p.ovChipkaartToevoegen(o);
-        p2.ovChipkaartToevoegen(o2);
+        rdao.save(reiziger2);
 
-        //Producten opslaan
-        for (Product pro : producten) {
-            session.beginTransaction();
-            session.save(pro);
-            session.getTransaction().commit();
+        System.out.println("[Test] ReizigerDAO.update() heeft de gegevens aangepast en opgeslagen.");
+        reiziger.setVoorletters("X");
+        rdao.update(reiziger);
+
+        System.out.println("[Test] ReizigerDAO.findById() heeft de volgende reiziger gevonden:");
+        System.out.println(rdao.findById(reiziger.getId()));
+
+        System.out.println("[Test] ReizigerDAO.findByGbdatum() heeft de volgende reiziger gevonden:");
+        System.out.println(rdao.findByGbdatum("1999-09-09"));
+
+
+        System.out.println("\n\n\n-------------------- Test AdresDAO -----------------------");
+        List<Adres> adressen = adao.findAll();
+
+        System.out.print("[Test] Eerst " + adressen.size() + " adressen, na AdresDAO.save() ");
+        adao.save(adres);
+        adressen = adao.findAll();
+        System.out.println(adressen.size() + " adressen\n");
+
+        System.out.println("[Test] AdresDAO.findAll() geeft de volgende adressen:");
+        for (Adres a : adressen) {
+            System.out.println(a);
         }
+        System.out.println();
 
-        session.close();
+        adao.save(adres2);
+
+        System.out.println("[Test] AdresDAO.update() heeft de gegevens aangepast en opgeslagen.");
+        adres.setPostcode("4210AB");
+        adao.update(adres);
+
+        System.out.println("[Test] AdresDAO.findByReiziger() heeft het volgende adres gevonden:");
+        System.out.println(adao.findByReiziger(reiziger2));
+
+
+        System.out.println("\n\n\n-------------------- Test ProductDAO -----------------------");
+        List<Product> producten = pdao.findAll();
+
+        System.out.print("[Test] Eerst " + producten.size() + " producten, na ProductDAO.save() ");
+        pdao.save(product);
+        producten = pdao.findAll();
+        System.out.println(producten.size() + " producten\n");
+
+        System.out.println("[Test] ProductDAO.findAll() geeft de volgende producten:");
+        for (Product p : producten) {
+            System.out.println(p);
+        }
+        System.out.println();
+
+        System.out.println("[Test] ProductDAO.update() heeft de gegevens aangepast en opgeslagen.");
+        product.setPrijs(1000.00);
+        pdao.update(product);
+
+        System.out.println("[Test] ProductDAO.findByOVChipkaart() heeft de volgende producten op deze OVChipkaart gevonden:");
+        System.out.println(pdao.findByOVChipkaart(ovChipkaart));
+
+
+        System.out.println("\n\n\n-------------------- Test OVChipkaartDAO -----------------------");
+        System.out.print("[Test] OVChipkaartDAO.save() is uitgevoerd\n");
+        odao.save(ovChipkaart);
+
+        System.out.println("[Test] OVChipkaartDAO.findByReiziger() heeft de volgende OV Chipkaarten gevonden:");
+        System.out.println(odao.findByReiziger(reiziger));
+
+        System.out.println("[Test] OVChipkaartDAO.update() heeft de gegevens aangepast en opgeslagen.");
+        ovChipkaart.setKlasse(2);
+        odao.update(ovChipkaart);
+
+        System.out.println("[Test] Product en OVChipkaart persisteren.");
+        ovChipkaart.getProducten().add(product);
+        odao.update(ovChipkaart);
+        System.out.println(odao.findByReiziger(reiziger));
+
+
+        System.out.println("\n\n\n-------------------- Test Delete functies -----------------------");
+        System.out.println("[Test] OVChipkaartDAO.delete() heeft de reiziger verwijderd.");
+        odao.delete(ovChipkaart);
+
+        System.out.println("[Test] ProductDAO.delete() heeft de reiziger verwijderd.");
+        pdao.delete(product);
+
+        System.out.println("[Test] AdresDAO.delete() heeft de reiziger verwijderd.");
+        adao.delete(adres);
+
+        System.out.println("[Test] ReizigerDAO.delete() heeft de reiziger verwijderd.");
+        rdao.delete(reiziger);
+
+
     }
 }

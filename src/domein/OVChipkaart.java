@@ -18,7 +18,12 @@ public class OVChipkaart {
     @JoinColumn(name = "reiziger_id")
     private Reiziger reiziger;
 
-    @ManyToMany(mappedBy = "ovChipkaarten")
+    @ManyToMany
+    @JoinTable(
+            name = "ov_chipkaart_product",
+            joinColumns = @JoinColumn(name = "kaart_nummer"),
+            inverseJoinColumns = @JoinColumn(name = "product_nummer")
+    )
     private List<Product> producten = new ArrayList<>();
 
     public OVChipkaart(Date geldig_tot, int klasse, double saldo) {
@@ -72,6 +77,12 @@ public class OVChipkaart {
 
     @Override
     public String toString() {
-        return "OVChipkaart: #" + kaart_nummer + " geldig tot: " + geldig_tot +  ", klasse " + klasse + ", saldo = " + saldo + ", reiziger id = " + reiziger.getId();
+        return "OVChipkaart: #" + kaart_nummer +
+                " geldig tot: " + geldig_tot +
+                ", klasse " + klasse +
+                ", saldo = " + saldo +
+                ", reiziger id = " + reiziger.getId() +
+                ", Product(en) {" + producten + "}";
+
     }
 }

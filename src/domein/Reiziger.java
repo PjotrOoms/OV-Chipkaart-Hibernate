@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "reiziger")
 public class Reiziger {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -20,8 +21,7 @@ public class Reiziger {
             mappedBy = "reiziger",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
-            fetch = FetchType.LAZY
-    )
+            fetch = FetchType.LAZY)
     private Adres adres;
 
     @OneToMany(
@@ -46,6 +46,10 @@ public class Reiziger {
 
     public String getVoorletters() {
         return voorletters;
+    }
+
+    public void setVoorletters(String voorletters) {
+        this.voorletters = voorletters;
     }
 
     public String getTussenvoegsel() {
@@ -77,6 +81,11 @@ public class Reiziger {
     }
 
     public String toString() {
-        return "Reiziger: #" + id + " " + voorletters + " " + tussenvoegsel + " " + achternaam + " (" + geboortedatum + ")" + adres;
+        return "Reiziger: #" + id +
+                ", " + voorletters +
+                ", " + tussenvoegsel +
+                ", " + achternaam +
+                ", " + geboortedatum +
+                ", {" + adres + "}";
     }
 }

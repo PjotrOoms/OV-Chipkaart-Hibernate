@@ -3,6 +3,7 @@ package domein;
 import javax.persistence.*;
 
 @Entity
+@Table(name = "adres")
 public class Adres {
     @Id
     @Column(name = "adres_id")
@@ -69,6 +70,6 @@ public class Adres {
     }
 
     public String toString(){
-        return "   Adres: #" + id + " " + postcode + " " + straat + " " + huisnummer + " " + woonplaats + ")";
+        return "   Adres: #" + id + " " + postcode + " " + straat + " " + huisnummer + " " + woonplaats;
     }
 }

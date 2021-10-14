@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "product")
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -13,12 +14,7 @@ public class Product {
     private String beschrijving;
     private double prijs;
 
-    @ManyToMany
-    @JoinTable(
-            name = "ov_chipkaart_product",
-            joinColumns = @JoinColumn(name = "product_nummer"),
-            inverseJoinColumns = @JoinColumn(name = "kaart_nummer")
-    )
+    @ManyToMany(mappedBy = "producten", targetEntity = OVChipkaart.class)
     private List<OVChipkaart> ovChipkaarten = new ArrayList<>();
 
     public Product(String naam, String beschrijving, double prijs) {
